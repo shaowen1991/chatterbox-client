@@ -20,12 +20,18 @@
 //   roomname: '4chan'
 // };
 
+$(document).ready(function() {
+  $('#send').submit(app.handleSubmit);
+});
+
 var app = { 
-  'apiURL' : undefined
+  'apiURL' : undefined,
+  'roomnames': undefined,
 }
 
 app.init = function() {
-  $("#send .submit").submit(app.handleSubmit);
+  //debugger;
+  app.roomnames = new Set();
 };
 
 app.send = function(message) {
@@ -44,56 +50,101 @@ app.send = function(message) {
     }
   });
 }
-app.fetch = function() {
+
+app.fetch = function(room) {
+  // $.get(app.apiURL, app.renderMessage);
   $.ajax({
-    // This is the url you should use to communicate with the parse API server.
     url: app.apiURL,
     type: 'GET',
-    data: JSON.stringify(message),
-    contentType: 'application/json',
+    data: {limit : 1000, order : '-createdAt'},
     success: function (data) {
-      console.log('chatterbox: Message recieved');
+      console.log('chatterbox: Message received: ', data.results);
+      room ? app.renderMessageInRoom(data, room) : app.renderMessage(data);
+      room ? undefined : app.createRoomList();
     },
     error: function (data) {
       // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
-      console.error('chatterbox: Failed to recieve message', data);
+      console.error('chatterbox: Failed to receive message', data);
     }
   });
 }
 
-
 app.clearMessages = function() {
-  $('#chats').html('');
+  $('#main #buttons').empty();
+  $('#chats').empty();
 }
 
-app.renderMessage = function(message) {
-  //if message is a object
-  if (typeof message === 'object') {
+app.renderMessage = function(messages) {
+  app.clearMessages();
+  // var $buttons = $('<div id=\'buttons\'></div>');
+  //debugger;
+  for (var message of messages.results) {
+    //debugger;
     var $button = $('<button class=\'username\'>'+ message.username + '</button>');
     $button.on('click', app.handleUsernameClick);
-    $('#main').append($button);
-    var $span = $('<span id=\'message\'>' + message.text + '</span>');
-    $('#chats').append($span);
+    $('#main #buttons').append($button);
+    // $('#main').append($buttons);
+    app.roomnames.add(message.roomname);
+      
+    var $username = $('<p class=\'username\'>' + message.username + ' (' + message.roomname + ') :</p>');
+    var $message = $('<span id=\'message\'>' + message.text + '<br></span>');
+    var $div = $('<div id=\'message\' class=\'chat\'></div><br>');
+    $div.append($username);
+    $div.append($message);
+    $('#chats').append($div);
   }
+}
+
+app.renderMessageInRoom = function(messages, targetRoomname) {
+  app.clearMessages();
+    // var $buttons = $('<div id=\'buttons\'></div>');
+    //debugger;
+    for (var message of messages.results) {
+      //debugger;
+      if (message.roomname === targetRoomname) {
+      var $button = $('<button class=\'username\'>'+ message.username + '</button>');
+      $button.on('click', app.handleUsernameClick);
+      $('#main #buttons').append($button);
+      var $username = $('<p class=\'username\'>' + message.username + ' (' + message.roomname + ') :</p>');
+      var $message = $('<span id=\'message\'>' + message.text + '<br></span>');
+      var $div = $('<div id=\'message\' class=\'chat\'></div><br>');
+      $div.append($username);
+      $div.append($message);
+      $('#chats').append($div);
+      }
+    }
 }
 
 app.handleUsernameClick = function(){
 
 }
 
+app.createRoomList = function() {
+  for(let key of app.roomnames) {
+    $('#manyrooms').append($('<option value=' + key + '>'+ key +'</option>'));
+  }
+  //create event for option, once we chose a option (room), invoke renderRoom(room)
+  $('#manyrooms').change(app.renderRoom($('#manyrooms').val()));
+}
+
+
 app.renderRoom = function(room) {
-  $('#roomSelect').append('<span>'+ room +'</span>')
+  console.log('call on renderRoom');
+  app.fetch(room);
 }
 
-app.handleSubmit = function() {
-
+app.handleSubmit = function(event) {
+  let message = {
+    username: window.location.search.slice(10),
+    text: $('#inputbox').val(),
+    // roomname: '4chan'
+  };
+  app.send(message);
+  event.preventDefault();
 }
 
-// $.get(app.apiURL, app.init);
+app.apiURL = 'http://parse.sfm8.hackreactor.com/chatterbox/classes/messages';
+// setInterval(app.fetch, 1000); 
+app.init();
+app.fetch();
 
-// app.prototype.init = function(messages) {
-//   for (let message of messages.results) {
-//         var publishMessage = message.username + ' : ' + message.text;
-//         $('#chats').append($('<span>'+ publishMessage +'</span>'));
-//       } 
-// }
