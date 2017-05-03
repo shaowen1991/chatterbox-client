@@ -23,25 +23,26 @@
     <script src="env/config.js"></script>
     <script src="scripts/app.js"></script>
   </head>
-
-
   <body>
     <div id="main">
       <h1>chatterbox</h1>
-      <div id="roomSelect">
-        <select id="manyrooms"></select>
-      </div> 
-      <form id="send" action="index.html">
-        <input type="text" id="inputbox" value="">
-        <input type="submit" class="submit" value="Send">
-      </form>
-      <div id='buttons'></div>
-    </div>
+      <!-- Your HTML goes here! -->
+
+      <div class="spinner"><img src="images/spiffygif_46x46.gif"></div>
+      <div id="rooms">
+        Room:
+        <select id="roomSelect">
+        </select>
+      </div>
+      <form action="#" id="send" method="post">
+        <input type="text" name="message" id="message"/>
+        <input type="submit" name="submit" class="submit"/>
+      </form>    </div>
     <div id="chats"></div>
 
-
-
-    <!--div id="other">Trigger the handler</div-->
-
-  </body>
+    <script>
+      $(function(){
+        app.init()
+      });
+    </script>  </body>
 </html>
